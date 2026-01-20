@@ -1,5 +1,3 @@
-[![Buy me a coffee](https://img.shields.io/badge/Support-Buy%20me%20a%20coffee-orange)](https://buycoffee.to/ao-dps)
-
 # Albion DPS Meter (CLI)
 
 Passive DPS/HPS meter for Albion Online (CLI-only).
@@ -10,6 +8,23 @@ Core safety rule: the meter aggregates only the local player and party members (
 <p align="center">
   <img src="assets/DPS.png" alt="">
 </p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-blue?logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey">
+  <img src="https://img.shields.io/badge/Game-Albion%20Online-orange">
+</p>
+
+---
+
+## ☕ Support the project
+
+If this project helps you and you'd like to support further development,
+you can buy me a coffee:
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-yellow?style=for-the-badge)](https://buycoffee.to/ao-dps/)
+
+Every contribution helps — thank you! ❤️
 
 ## Quickstart (Windows / PowerShell)
 1) Create and activate a virtualenv:
