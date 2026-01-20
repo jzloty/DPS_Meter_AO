@@ -1,3 +1,5 @@
+<a href="https://buycoffee.to/ao-dps" target="_blank"><img src="https://buycoffee.to/static/img/share/share-button-white.png" style="width: 283px; height: 74px" alt="Buy me a coffee."></a>
+
 # Albion DPS Meter (CLI)
 
 Passive DPS/HPS meter for Albion Online (CLI-only).
