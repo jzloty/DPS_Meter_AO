@@ -88,6 +88,7 @@ def run_gui(args: argparse.Namespace) -> int:
         zone_label_provider=meter.zone_label,
         history_provider=meter.history,
         history_limit=max(args.history, 1),
+        set_mode=meter.set_mode,
     )
 
     if args.gui_command == "replay":
@@ -110,6 +111,7 @@ def run_gui(args: argparse.Namespace) -> int:
         zone_label_provider=meter.zone_label,
         history_provider=meter.history,
         history_limit=max(args.history, 1),
+        set_mode=meter.set_mode,
     )
 
     logging.getLogger(__name__).error("Unknown gui command")
@@ -157,6 +159,7 @@ def _run_textual_app(
     zone_label_provider: Callable[[], str | None],
     history_provider: Callable[[int], list],
     history_limit: int,
+    set_mode: Callable[[str], None],
 ) -> int:
     snapshot_queue: SnapshotQueue = queue.Queue()
     stop_event = threading.Event()
@@ -174,6 +177,7 @@ def _run_textual_app(
         zone_label_provider=zone_label_provider,
         history_provider=history_provider,
         history_limit=history_limit,
+        set_mode=set_mode,
     )
     try:
         app.run()

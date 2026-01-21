@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import queue
 from collections.abc import Callable
+from datetime import datetime
 
 from rich.text import Text
 from textual.app import App, ComposeResult
@@ -18,6 +19,17 @@ FALLBACK_PALETTE = ["#ffd166", "#06d6a0", "#118ab2", "#ef476f", "#a39dff"]
 
 
 class AlbionDpsApp(App):
+    BINDINGS = [
+        ("q", "quit", "Quit"),
+        ("b", "mode_battle", "Battle"),
+        ("z", "mode_zone", "Zone"),
+        ("m", "mode_manual", "Manual"),
+        ("1", "sort_dps", "Sort DPS"),
+        ("2", "sort_dmg", "Sort DMG"),
+        ("3", "sort_hps", "Sort HPS"),
+        ("4", "sort_heal", "Sort Heal"),
+    ]
+
     CSS = """
     Screen {
         background: #0c1116;
@@ -53,6 +65,7 @@ class AlbionDpsApp(App):
         zone_label_provider: Callable[[], str | None],
         history_provider: Callable[[int], list],
         history_limit: int,
+        set_mode: Callable[[str], None],
     ) -> None:
         super().__init__()
         self._snapshot_queue = snapshot_queue
@@ -62,6 +75,7 @@ class AlbionDpsApp(App):
         self._zone_label_provider = zone_label_provider
         self._history_provider = history_provider
         self._history_limit = history_limit
+        self._set_mode = set_mode
         self._last_snapshot: MeterSnapshot | None = None
         self._header = Static(id="header")
         self._table = DataTable(id="scoreboard")
@@ -92,11 +106,13 @@ class AlbionDpsApp(App):
 
     def _render_snapshot(self, snapshot: MeterSnapshot) -> None:
         zone_label = self._zone_label_provider() if self._zone_label_provider else None
+        timestamp = datetime.fromtimestamp(snapshot.timestamp)
+        time_label = timestamp.strftime("%Y-%m-%d %H:%M:%S")
         header = "Albion DPS Meter  [GUI]"
         header += f"  [mode {self._mode}]"
         if zone_label:
             header += f"  [zone {zone_label}]"
-        header += f"\nTimestamp: {snapshot.timestamp:.3f}  Sort: {self._sort_key}  Top: {self._top_n}"
+        header += f"\nTime: {time_label}  Sort: {self._sort_key}  Top: {self._top_n}"
         self._header.update(header)
 
         entries = _snapshot_entries(snapshot, self._sort_key)
@@ -126,6 +142,44 @@ class AlbionDpsApp(App):
         for row in rows:
             self._table.add_row(*row)
         self._history.update(_format_history(self._history_provider, self._history_limit))
+
+    def action_quit(self) -> None:
+        self.exit()
+
+    def action_mode_battle(self) -> None:
+        self._set_mode("battle")
+        self._mode = "battle"
+        self.refresh()
+
+    def action_mode_zone(self) -> None:
+        self._set_mode("zone")
+        self._mode = "zone"
+        self.refresh()
+
+    def action_mode_manual(self) -> None:
+        self._set_mode("manual")
+        self._mode = "manual"
+        self.refresh()
+
+    def action_sort_dps(self) -> None:
+        self._sort_key = "dps"
+        if self._last_snapshot is not None:
+            self._render_snapshot(self._last_snapshot)
+
+    def action_sort_dmg(self) -> None:
+        self._sort_key = "dmg"
+        if self._last_snapshot is not None:
+            self._render_snapshot(self._last_snapshot)
+
+    def action_sort_hps(self) -> None:
+        self._sort_key = "hps"
+        if self._last_snapshot is not None:
+            self._render_snapshot(self._last_snapshot)
+
+    def action_sort_heal(self) -> None:
+        self._sort_key = "heal"
+        if self._last_snapshot is not None:
+            self._render_snapshot(self._last_snapshot)
 
 
 def _snapshot_entries(
@@ -157,8 +211,9 @@ def _bar(value: float, max_value: float, width: int, color: str) -> Text:
 
 
 def _infer_role(damage: float, heal: float, max_damage: float, max_heal: float) -> str | None:
-    if heal > 0.0 and heal >= damage:
-        return "heal"
+    if heal > 0.0:
+        if damage <= 0.0 or heal >= damage * 0.7 or (max_heal > 0.0 and heal >= max_heal * 0.5):
+            return "heal"
     if max_damage > 0.0 and damage >= max_damage * 0.6:
         return "dps"
     if damage > 0.0 or heal > 0.0:
@@ -180,13 +235,42 @@ def _format_history(
 ) -> Text:
     history = history_provider(max(limit, 1))
     if not history:
-        return Text("History:\n(empty)")
-    lines = ["History:"]
+        text = Text("History:\n(empty)\n\nLegend:\n")
+        _append_legend(text)
+        return text
+    text = Text()
+    text.append("History:\n")
     for idx, summary in enumerate(history, start=1):
         top = summary.entries[0] if summary.entries else None
-        label = top.label if top else "-"
+        label = _shorten_label(top.label if top else "-", 14)
         dps = top.dps if top else 0.0
-        lines.append(
-            f"[{idx}] {summary.mode} {summary.duration:05.2f}s | {label} dmg {summary.total_damage:.0f} dps {dps:.1f}"
-        )
-    return Text("\n".join(lines))
+        text.append(f"[{idx}] {summary.mode} {_format_duration(summary.duration)}\n")
+        text.append(f" {label} dmg {summary.total_damage:.0f} dps {dps:.1f}\n")
+        if summary.entries and len(summary.entries) > 1:
+            text.append(f" +{len(summary.entries) - 1} others\n")
+    text.append("\nLegend:\n")
+    _append_legend(text)
+    return text
+
+
+def _format_duration(seconds: float) -> str:
+    total = int(round(seconds))
+    minutes, secs = divmod(total, 60)
+    return f"{minutes:02d}:{secs:02d}"
+
+
+def _append_legend(text: Text) -> None:
+    text.append("DPS", style=ROLE_COLORS["dps"])
+    text.append("  ")
+    text.append("Tank", style=ROLE_COLORS["tank"])
+    text.append("  ")
+    text.append("Heal", style=ROLE_COLORS["heal"])
+
+
+def _shorten_label(label: str, limit: int) -> str:
+    if len(label) <= limit:
+        return label
+    if limit <= 1:
+        return label[:limit]
+    trimmed = label[: max(limit - 3, 0)]
+    return f"{trimmed}..."

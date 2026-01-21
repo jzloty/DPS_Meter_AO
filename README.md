@@ -146,6 +146,10 @@ albion-dps gui replay .\path\to\file.pcap
 Notes:
 - GUI runs in a terminal window (no overlay on the game client).
 - Exit with `Ctrl+C`.
+GUI keys:
+- `q` quit
+- `b` battle mode, `z` zone mode, `m` manual mode
+- `1` dps sort, `2` dmg sort, `3` hps sort, `4` heal sort
 
 ## Modes (what “session” means)
 - `battle` (default): creates a session when you enter combat state and ends it when you leave combat state.

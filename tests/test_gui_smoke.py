@@ -29,6 +29,7 @@ def test_gui_smoke_headless() -> None:
             zone_label_provider=lambda: None,
             history_provider=lambda _limit: [],
             history_limit=5,
+            set_mode=lambda _mode: None,
         )
         async with app.run_test() as pilot:
             snapshot_queue.put(
@@ -41,7 +42,8 @@ def test_gui_smoke_headless() -> None:
                     names={1: "Dps", 2: "Heal"},
                 )
             )
-            await pilot.pause()
+            app._drain_queue()
+            await pilot.pause(0.1)
             table = app.query_one(DataTable)
             assert table.row_count > 0
 

@@ -18,6 +18,10 @@ PARTY_SUBTYPE_NAME_KEYS = {
     227: 13,
     229: 6,
 }
+PARTY_SUBTYPE_ID_KEYS = {
+    209: 0,
+    210: 0,
+}
 SELF_SUBTYPE_NAME_KEYS = {
     228: 1,
     238: 0,
@@ -82,6 +86,12 @@ class PartyRegistry:
             return
         if subtype == COMBAT_TARGET_SUBTYPE:
             self._apply_target_link(event.parameters, packet)
+            return
+        id_key = PARTY_SUBTYPE_ID_KEYS.get(subtype)
+        if id_key is not None:
+            entity_id = event.parameters.get(id_key)
+            if isinstance(entity_id, int):
+                self._party_ids.add(entity_id)
             return
         name_key = PARTY_SUBTYPE_NAME_KEYS.get(subtype)
         if name_key is None:
