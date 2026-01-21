@@ -50,6 +50,8 @@ class PartyRegistry:
     strict: bool = True
     _party_names: set[str] = field(default_factory=set)
     _party_ids: set[int] = field(default_factory=set)
+    _party_roster_candidates: set[int] = field(default_factory=set)
+    _party_roster_self_seen: bool = False
     _target_ids: set[int] = field(default_factory=set)
     _self_ids: set[int] = field(default_factory=set)
     _primary_self_id: int | None = None
@@ -91,7 +93,10 @@ class PartyRegistry:
         if id_key is not None:
             entity_id = event.parameters.get(id_key)
             if isinstance(entity_id, int):
-                self._party_ids.add(entity_id)
+                self._party_roster_candidates.add(entity_id)
+                if entity_id in self._self_ids:
+                    self._party_roster_self_seen = True
+                self._promote_roster_candidates()
             return
         name_key = PARTY_SUBTYPE_NAME_KEYS.get(subtype)
         if name_key is None:
@@ -196,6 +201,7 @@ class PartyRegistry:
                 self._self_ids.add(entity_id)
                 if self._primary_self_id is None:
                     self._primary_self_id = entity_id
+        self._promote_roster_candidates()
 
     def set_self_name(self, name: str, *, confirmed: bool = False) -> None:
         if not isinstance(name, str) or not name:
@@ -349,11 +355,27 @@ class PartyRegistry:
             self._primary_self_id = candidate_id
             self._self_ids.add(candidate_id)
             self._party_ids.add(candidate_id)
+            if candidate_id in self._party_roster_candidates:
+                self._party_roster_self_seen = True
+            self._promote_roster_candidates()
             return
         if candidate_id != self._primary_self_id:
             return
         self._self_ids.add(candidate_id)
         self._party_ids.add(candidate_id)
+        if candidate_id in self._party_roster_candidates:
+            self._party_roster_self_seen = True
+        self._promote_roster_candidates()
+
+    def _promote_roster_candidates(self) -> None:
+        if not self._party_roster_candidates:
+            return
+        if not self._party_roster_self_seen and self._self_ids:
+            if any(entity_id in self._self_ids for entity_id in self._party_roster_candidates):
+                self._party_roster_self_seen = True
+        if not self._party_roster_self_seen:
+            return
+        self._party_ids.update(self._party_roster_candidates)
 
     def _add_self_candidate_score(self, candidate_id: int, ts: float, *, weight: float) -> None:
         if not isinstance(candidate_id, int):
@@ -410,6 +432,8 @@ class PartyRegistry:
             self._party_ids.difference_update(self._self_ids)
             self._self_ids.clear()
             self._primary_self_id = None
+            self._party_roster_candidates.clear()
+            self._party_roster_self_seen = False
 
 
 def _infer_zone_key(packet: RawPacket) -> tuple[str, int] | None:

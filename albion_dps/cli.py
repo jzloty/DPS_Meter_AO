@@ -10,7 +10,7 @@ from albion_dps.cli_ui import format_dashboard, format_history_lines, render_loo
 from albion_dps.domain import FameTracker, NameRegistry, PartyRegistry
 from albion_dps.gui.runner import run_gui
 from albion_dps.logging_config import configure_logging
-from albion_dps.meter.session_meter import SessionMeter, SessionSummary
+from albion_dps.meter.session_meter import SessionEntry, SessionMeter, SessionSummary
 from albion_dps.pipeline import live_snapshots, replay_snapshots
 from albion_dps.protocol.combat_mapper import CombatEventMapper
 from albion_dps.protocol.photon_decode import PhotonDecoder
@@ -354,9 +354,14 @@ def _format_duration(seconds: float) -> str:
     return f"{minutes:02d}:{secs:02d}"
 
 
+HISTORY_LINE_MAX_PLAYERS = 3
+HISTORY_COPY_MAX_PLAYERS = 5
+HISTORY_LABEL_LIMIT = 14
+
+
 def _format_history_line(
     summary: SessionSummary,
-    max_players: int = 3,
+    max_players: int = HISTORY_LINE_MAX_PLAYERS,
     *,
     names: dict[int, str] | None = None,
 ) -> str:
@@ -364,18 +369,17 @@ def _format_history_line(
     if summary.mode == "zone" and summary.label:
         label = f"zone {summary.label}"
     duration = _format_duration(summary.duration)
-    players = summary.entries[:max_players]
     names = names or {}
-    players_text = ", ".join(
-        f"{_resolve_label(entry.label, names)} dmg {_format_int(entry.damage)} dps {entry.dps:.1f} heal {_format_int(entry.heal)} hps {entry.hps:.1f}"
-        for entry in players
+    players_text = _format_players_summary(
+        summary.entries, max_players=max_players, names=names
     )
-    return f"{label} {duration} | {players_text}"
+    totals = _format_totals(summary.total_damage, summary.total_heal)
+    return f"{label} {duration} | {totals} | {players_text}"
 
 
 def _format_history_copy(
     summary: SessionSummary,
-    max_players: int = 3,
+    max_players: int = HISTORY_COPY_MAX_PLAYERS,
     *,
     name_lookup: Callable[[int], str | None] | None = None,
 ) -> str:
@@ -383,12 +387,11 @@ def _format_history_copy(
     if summary.mode == "zone" and summary.label:
         label = f"zone {summary.label}"
     duration = _format_duration(summary.duration)
-    players = summary.entries[:max_players]
-    players_text = ", ".join(
-        f"{_resolve_label_lookup(entry.label, name_lookup)} dmg {_format_int(entry.damage)} dps {entry.dps:.1f} heal {_format_int(entry.heal)} hps {entry.hps:.1f}"
-        for entry in players
+    players_text = _format_players_copy(
+        summary.entries, max_players=max_players, name_lookup=name_lookup
     )
-    return f"{label} {duration} | {players_text}"
+    totals = _format_totals(summary.total_damage, summary.total_heal)
+    return f"{label} {duration} | {totals} | {players_text}"
 
 
 def _format_int(value: float) -> int:
@@ -413,6 +416,48 @@ def _resolve_label_lookup(
         if mapped:
             return mapped
     return label
+
+
+def _format_totals(total_damage: float, total_heal: float) -> str:
+    return f"total dmg {_format_int(total_damage)} heal {_format_int(total_heal)}"
+
+
+def _format_players_summary(
+    entries: list[SessionEntry], max_players: int, names: dict[int, str]
+) -> str:
+    players = entries[:max_players]
+    parts = [
+        f"{_shorten_label(_resolve_label(entry.label, names))} dmg {_format_int(entry.damage)} dps {entry.dps:.1f}"
+        for entry in players
+    ]
+    extra = len(entries) - len(players)
+    if extra > 0:
+        parts.append(f"+{extra} others")
+    return ", ".join(parts) if parts else "(no data)"
+
+
+def _format_players_copy(
+    entries: list[SessionEntry],
+    max_players: int,
+    name_lookup: Callable[[int], str | None] | None,
+) -> str:
+    players = entries[:max_players]
+    parts = [
+        f"{_shorten_label(_resolve_label_lookup(entry.label, name_lookup))} dmg {_format_int(entry.damage)} dps {entry.dps:.1f}"
+        for entry in players
+    ]
+    extra = len(entries) - len(players)
+    if extra > 0:
+        parts.append(f"+{extra} others")
+    return ", ".join(parts) if parts else "(no data)"
+
+
+def _shorten_label(label: str, limit: int = HISTORY_LABEL_LIMIT) -> str:
+    if len(label) <= limit:
+        return label
+    if limit <= 3:
+        return label[:limit]
+    return f"{label[: limit - 3]}..."
 
 
 
