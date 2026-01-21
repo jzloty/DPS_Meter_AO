@@ -8,7 +8,7 @@ from albion_dps.capture import auto_detect_interface, list_interfaces
 from albion_dps.cli_clipboard import copy_to_clipboard
 from albion_dps.cli_ui import format_dashboard, format_history_lines, render_loop
 from albion_dps.domain import FameTracker, NameRegistry, PartyRegistry
-from albion_dps.gui.runner import run_gui_stub
+from albion_dps.gui.runner import run_gui
 from albion_dps.logging_config import configure_logging
 from albion_dps.meter.session_meter import SessionMeter, SessionSummary
 from albion_dps.pipeline import live_snapshots, replay_snapshots
@@ -131,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
         if not args.gui_command:
             parser.parse_args(["gui", "--help"])
             return 0
-        return run_gui_stub(args)
+        return run_gui(args)
 
     if args.command == "live":
         if args.list_interfaces:
