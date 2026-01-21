@@ -15,6 +15,7 @@ albion-dps = "albion_dps.cli:main"
 [project.optional-dependencies]
 test = ["pytest>=7.0"]
 capture = ["pcapy-ng>=1.0.0"]
+gui = ["textual>=0.45"]
 
 [tool.setuptools.packages.find]
 where = ["."]

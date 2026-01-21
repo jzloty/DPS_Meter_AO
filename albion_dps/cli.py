@@ -8,6 +8,7 @@ from albion_dps.capture import auto_detect_interface, list_interfaces
 from albion_dps.cli_clipboard import copy_to_clipboard
 from albion_dps.cli_ui import format_dashboard, format_history_lines, render_loop
 from albion_dps.domain import FameTracker, NameRegistry, PartyRegistry
+from albion_dps.gui.runner import run_gui_stub
 from albion_dps.logging_config import configure_logging
 from albion_dps.meter.session_meter import SessionMeter, SessionSummary
 from albion_dps.pipeline import live_snapshots, replay_snapshots
@@ -26,8 +27,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     live = subparsers.add_parser("live")
     replay = subparsers.add_parser("replay")
+    gui = subparsers.add_parser("gui")
+    gui_subparsers = gui.add_subparsers(dest="gui_command")
+    gui_live = gui_subparsers.add_parser("live")
+    gui_replay = gui_subparsers.add_parser("replay")
 
-    for sub in (live, replay):
+    for sub in (live, replay, gui_live, gui_replay):
         sub.add_argument("--sort", choices=["dmg", "dps", "heal", "hps"], default="dps")
         sub.add_argument("--top", type=int, default=10)
         sub.add_argument("--snapshot")
@@ -50,6 +55,14 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--timeout-ms", type=int, default=1000)
     live.add_argument("--dump-raw")
     replay.add_argument("pcap")
+    gui_live.add_argument("--interface")
+    gui_live.add_argument("--list-interfaces", action="store_true")
+    gui_live.add_argument("--bpf", default="udp and (port 5055 or port 5056 or port 5058)")
+    gui_live.add_argument("--promisc", action="store_true")
+    gui_live.add_argument("--snaplen", type=int, default=65535)
+    gui_live.add_argument("--timeout-ms", type=int, default=1000)
+    gui_live.add_argument("--dump-raw")
+    gui_replay.add_argument("pcap")
 
     return parser
 
@@ -113,6 +126,12 @@ def main(argv: list[str] | None = None) -> int:
             key_handler=key_handler,
         )
         return 0
+
+    if args.command == "gui":
+        if not args.gui_command:
+            parser.parse_args(["gui", "--help"])
+            return 0
+        return run_gui_stub(args)
 
     if args.command == "live":
         if args.list_interfaces:
