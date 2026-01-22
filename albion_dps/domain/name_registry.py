@@ -11,6 +11,10 @@ NAME_VALUE_KEY = 1
 NAME_SUBTYPE_KEY = 252
 NAME_SUBTYPE_ID_NAME = 275
 NAME_SUBTYPE_NAME_KEY = 2
+NAME_SUBTYPE_ENTITY_NAME = 166
+NAME_SUBTYPE_ENTITY_ID_KEY = 0
+NAME_SUBTYPE_ENTITY_ALT_ID_KEY = 4
+NAME_SUBTYPE_ENTITY_NAME_KEY = 5
 
 
 @dataclass
@@ -63,6 +67,11 @@ class NameRegistry:
         self._apply_party_roster(parameters)
         self._apply_guid_link(parameters)
         subtype = parameters.get(NAME_SUBTYPE_KEY)
+        if subtype == NAME_SUBTYPE_ENTITY_NAME:
+            name = parameters.get(NAME_SUBTYPE_ENTITY_NAME_KEY)
+            if isinstance(name, str) and name:
+                self._store(parameters.get(NAME_SUBTYPE_ENTITY_ID_KEY), name)
+                self._store(parameters.get(NAME_SUBTYPE_ENTITY_ALT_ID_KEY), name)
         if subtype == NAME_SUBTYPE_ID_NAME:
             self._store(parameters.get(NAME_ID_KEY), parameters.get(NAME_SUBTYPE_NAME_KEY))
         raw_id = parameters.get(NAME_ID_KEY)
