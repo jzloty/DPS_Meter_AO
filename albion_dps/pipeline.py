@@ -216,6 +216,11 @@ def stream_snapshots(
                 meter.observe_packet(packet)
             except TypeError:
                 pass
+        if name_registry is not None and hasattr(meter, "refresh_history_labels"):
+            try:
+                meter.refresh_history_labels()
+            except TypeError:
+                pass
 
         if last_emit is None or snapshot_interval <= 0 or packet.timestamp - last_emit >= snapshot_interval:
             snapshot = meter.snapshot()

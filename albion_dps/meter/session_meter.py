@@ -261,6 +261,46 @@ class SessionMeter:
             return True
         return False
 
+    def refresh_history_labels(self) -> bool:
+        if self.name_lookup is None:
+            return False
+        history = self._history.get(self.mode)
+        if not history:
+            return False
+        changed = False
+        for idx in range(len(history)):
+            summary = history[idx]
+            grouped: dict[str, tuple[float, float]] = {}
+            changed_local = False
+            for entry in summary.entries:
+                label = entry.label
+                if label.isdigit():
+                    mapped = self.name_lookup(int(label))
+                    if mapped:
+                        label = mapped
+                        changed_local = True
+                if label in grouped:
+                    changed_local = True
+                damage, heal = grouped.get(label, (0.0, 0.0))
+                grouped[label] = (damage + entry.damage, heal + entry.heal)
+            entries = _build_entries_from_grouped(grouped, summary.duration)
+            total_damage = sum(entry.damage for entry in entries)
+            total_heal = sum(entry.heal for entry in entries)
+            if changed_local:
+                changed = True
+            history[idx] = SessionSummary(
+                mode=summary.mode,
+                start_ts=summary.start_ts,
+                end_ts=summary.end_ts,
+                duration=summary.duration,
+                label=summary.label,
+                entries=entries,
+                total_damage=total_damage,
+                total_heal=total_heal,
+                reason=summary.reason,
+            )
+        return changed
+
     def manual_active(self) -> bool:
         return self._manual_active
 

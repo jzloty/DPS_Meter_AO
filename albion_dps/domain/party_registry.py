@@ -298,7 +298,12 @@ class PartyRegistry:
         if not self._self_name or not self._self_name_confirmed:
             return
         for entity_id in self._self_ids:
-            if name_registry.lookup(entity_id) != self._self_name:
+            current = name_registry.lookup(entity_id)
+            if current is not None and current != self._self_name:
+                continue
+            if hasattr(name_registry, "record_weak"):
+                name_registry.record_weak(entity_id, self._self_name)
+            else:
                 name_registry.record(entity_id, self._self_name)
 
     def allows(self, source_id: int, name_registry: NameRegistry | None = None) -> bool:

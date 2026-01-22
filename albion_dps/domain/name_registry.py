@@ -22,6 +22,8 @@ class NameRegistry:
     _names: dict[int, str] = field(default_factory=dict)
     _guid_names: dict[bytes, str] = field(default_factory=dict)
     _id_guids: dict[int, bytes] = field(default_factory=dict)
+    _strong_name_ids: dict[str, set[int]] = field(default_factory=dict)
+    _weak_name_ids: dict[str, set[int]] = field(default_factory=dict)
 
     def observe(self, message: PhotonMessage) -> None:
         if message.event_code is None:
@@ -57,6 +59,9 @@ class NameRegistry:
     def record(self, entity_id: int, name: str) -> None:
         self._store(entity_id, name)
 
+    def record_weak(self, entity_id: int, name: str) -> None:
+        self._store(entity_id, name, weak=True)
+
     def snapshot_guid_names(self) -> dict[bytes, str]:
         return dict(self._guid_names)
 
@@ -73,7 +78,7 @@ class NameRegistry:
                 self._store(parameters.get(NAME_SUBTYPE_ENTITY_ID_KEY), name)
                 self._store(parameters.get(NAME_SUBTYPE_ENTITY_ALT_ID_KEY), name)
         if subtype == NAME_SUBTYPE_ID_NAME:
-            self._store(parameters.get(NAME_ID_KEY), parameters.get(NAME_SUBTYPE_NAME_KEY))
+            self._store(parameters.get(NAME_ID_KEY), parameters.get(NAME_SUBTYPE_NAME_KEY), weak=True)
         raw_id = parameters.get(NAME_ID_KEY)
         raw_name = parameters.get(NAME_VALUE_KEY)
 
@@ -84,8 +89,24 @@ class NameRegistry:
 
         self._store(raw_id, raw_name)
 
-    def _store(self, entity_id: object, name: object) -> None:
+    def _store(self, entity_id: object, name: object, *, weak: bool = False) -> None:
         if isinstance(entity_id, int) and isinstance(name, str) and name:
+            if weak:
+                strong_ids = self._strong_name_ids.get(name, set())
+                if strong_ids and entity_id not in strong_ids:
+                    return
+                self._weak_name_ids.setdefault(name, set()).add(entity_id)
+            else:
+                strong_ids = self._strong_name_ids.setdefault(name, set())
+                strong_ids.add(entity_id)
+                weak_ids = self._weak_name_ids.get(name)
+                if weak_ids:
+                    for weak_id in list(weak_ids):
+                        if weak_id in strong_ids:
+                            continue
+                        if self._names.get(weak_id) == name:
+                            self._names.pop(weak_id, None)
+                    weak_ids.intersection_update(strong_ids)
             self._names[entity_id] = name
             return
         if isinstance(entity_id, int) and _is_guid(name):

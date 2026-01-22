@@ -188,13 +188,22 @@ def _snapshot_entries(
     field = SORT_FIELD.get(sort_key, "dps")
     entries: list[tuple[str, float, float, float, float, float]] = []
     names = snapshot.names or {}
+    grouped: dict[str, list[float]] = {}
     for source_id, stats in snapshot.totals.items():
         label = names.get(source_id) or str(source_id)
         damage = float(stats.get("damage", 0.0))
         heal = float(stats.get("heal", 0.0))
         dps = float(stats.get("dps", 0.0))
         hps = float(stats.get("hps", 0.0))
-        sort_value = float(stats.get(field, 0.0))
+        if label not in grouped:
+            grouped[label] = [0.0, 0.0, 0.0, 0.0]
+        grouped[label][0] += damage
+        grouped[label][1] += heal
+        grouped[label][2] += dps
+        grouped[label][3] += hps
+    for label, values in grouped.items():
+        damage, heal, dps, hps = values
+        sort_value = float({"damage": damage, "heal": heal, "dps": dps, "hps": hps}[field])
         entries.append((label, damage, heal, dps, hps, sort_value))
     entries.sort(key=lambda item: item[5], reverse=True)
     return entries
