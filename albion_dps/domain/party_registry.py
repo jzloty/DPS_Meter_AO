@@ -302,10 +302,7 @@ class PartyRegistry:
             current = name_registry.lookup(entity_id)
             if current is not None and current != self._self_name:
                 continue
-            if hasattr(name_registry, "record_weak"):
-                name_registry.record_weak(entity_id, self._self_name)
-            else:
-                name_registry.record(entity_id, self._self_name)
+            name_registry.record(entity_id, self._self_name)
 
     def allows(self, source_id: int, name_registry: NameRegistry | None = None) -> bool:
         if not isinstance(source_id, int):
