@@ -18,6 +18,7 @@ PARTY_SUBTYPE_NAME_KEYS = {
     227: 13,
     229: 6,
 }
+PARTY_SUBTYPE_DISBAND = 213
 SELF_SUBTYPE_NAME_KEYS = {
     228: 1,
     238: 0,
@@ -81,6 +82,9 @@ class PartyRegistry:
 
         subtype = event.parameters.get(PARTY_SUBTYPE_KEY)
         if not isinstance(subtype, int):
+            return
+        if subtype == PARTY_SUBTYPE_DISBAND:
+            self._clear_party()
             return
         if subtype == COMBAT_TARGET_SUBTYPE:
             self._apply_target_link(event.parameters, packet)
@@ -441,9 +445,15 @@ class PartyRegistry:
             self._party_ids.difference_update(self._self_ids)
             self._self_ids.clear()
             self._primary_self_id = None
-            self._self_name = None
-            self._self_name_confirmed = False
             self._combat_ids_seen.clear()
+
+    def _clear_party(self) -> None:
+        self._party_names.clear()
+        self._resolved_party_names.clear()
+        if self._self_ids:
+            self._party_ids.intersection_update(self._self_ids)
+        else:
+            self._party_ids.clear()
 
 
 def _infer_zone_key(packet: RawPacket) -> tuple[str, int] | None:

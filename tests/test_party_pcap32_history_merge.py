@@ -35,7 +35,7 @@ def test_pcap32_party_history_merges_to_three_fights() -> None:
         pass
 
     history = meter.history(limit=10)
-    assert len(history) == 4
+    assert len(history) == 3
     for summary in history:
         labels = {entry.label for entry in summary.entries}
         assert "SocialFur10" in labels
