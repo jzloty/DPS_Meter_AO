@@ -100,7 +100,7 @@ def stream_snapshots(
     last_timestamp: float | None = None
     pending_events: list[CombatEvent] = []
     pending_combat_states: list[tuple[float, int, bool, bool]] = []
-    pending_max_age = 20.0
+    pending_max_age = 120.0
     pending_max_count = 2000
 
     for packet in packets:

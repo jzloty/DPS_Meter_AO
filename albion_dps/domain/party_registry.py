@@ -39,7 +39,7 @@ TARGET_SELF_NAME_WINDOW_SECONDS = 60.0
 TARGET_SELF_NAME_CONFIRM_COUNT = 20
 SELF_ID_CANDIDATE_TTL_SECONDS = 15.0
 SELF_ID_CORRELATION_WINDOW_SECONDS = 0.75
-SELF_ID_MIN_SCORE = 2.0
+SELF_ID_MIN_SCORE = 1.0
 SELF_ID_MIN_SCORE_GAP = 1.0
 TARGET_LINK_WINDOW_SECONDS = 2.0
 TARGET_LINK_REORDER_SECONDS = 0.15
@@ -53,6 +53,7 @@ class PartyRegistry:
     _resolved_party_names: set[str] = field(default_factory=set)
     _party_roster_candidates: set[int] = field(default_factory=set)
     _party_roster_self_seen: bool = False
+    _combat_ids_seen: set[int] = field(default_factory=set)
     _target_ids: set[int] = field(default_factory=set)
     _self_ids: set[int] = field(default_factory=set)
     _primary_self_id: int | None = None
@@ -188,8 +189,6 @@ class PartyRegistry:
             default=0.0,
         )
         if best_score >= SELF_ID_MIN_SCORE and (best_score - second_score) >= SELF_ID_MIN_SCORE_GAP:
-            if self._self_candidate_link_hits.get(best_id, 0) <= 0 and best_score < 5.0:
-                return
             if self._self_candidate_combat_hits.get(best_id, 0) <= 0:
                 return
             self._accept_self_id_candidate(best_id)
@@ -254,6 +253,8 @@ class PartyRegistry:
                 continue
             if not isinstance(entity_id, int) or entity_id <= 0:
                 continue
+            if entity_id not in self._combat_ids_seen and entity_id not in self._self_ids:
+                continue
             mapped_ids.add(entity_id)
             self._resolved_party_names.add(name)
         if mapped_ids:
@@ -309,6 +310,7 @@ class PartyRegistry:
     def allows(self, source_id: int, name_registry: NameRegistry | None = None) -> bool:
         if not isinstance(source_id, int):
             return False
+        self._combat_ids_seen.add(source_id)
         if self.strict:
             if not self._self_ids:
                 return False
@@ -456,6 +458,7 @@ class PartyRegistry:
             self._primary_self_id = None
             self._party_roster_candidates.clear()
             self._party_roster_self_seen = False
+            self._combat_ids_seen.clear()
 
 
 def _infer_zone_key(packet: RawPacket) -> tuple[str, int] | None:

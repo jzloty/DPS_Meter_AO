@@ -24,6 +24,7 @@ class NameRegistry:
     _id_guids: dict[int, bytes] = field(default_factory=dict)
     _strong_name_ids: dict[str, set[int]] = field(default_factory=dict)
     _weak_name_ids: dict[str, set[int]] = field(default_factory=dict)
+    _strong_id_names: dict[int, str] = field(default_factory=dict)
 
     def observe(self, message: PhotonMessage) -> None:
         if message.event_code is None:
@@ -92,6 +93,9 @@ class NameRegistry:
     def _store(self, entity_id: object, name: object, *, weak: bool = False) -> None:
         if isinstance(entity_id, int) and isinstance(name, str) and name:
             if weak:
+                strong_name = self._strong_id_names.get(entity_id)
+                if strong_name is not None and strong_name != name:
+                    return
                 strong_ids = self._strong_name_ids.get(name, set())
                 if strong_ids and entity_id not in strong_ids:
                     return
@@ -99,6 +103,7 @@ class NameRegistry:
             else:
                 strong_ids = self._strong_name_ids.setdefault(name, set())
                 strong_ids.add(entity_id)
+                self._strong_id_names[entity_id] = name
                 weak_ids = self._weak_name_ids.get(name)
                 if weak_ids:
                     for weak_id in list(weak_ids):

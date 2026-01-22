@@ -233,7 +233,10 @@ class SessionMeter:
             label = str(event.source_id)
         for idx in range(len(history) - 1, -1, -1):
             summary = history[idx]
-            if event.timestamp < summary.start_ts or event.timestamp > summary.end_ts:
+            if (
+                event.timestamp < (summary.start_ts - COMBAT_END_GRACE_SECONDS)
+                or event.timestamp > (summary.end_ts + COMBAT_END_GRACE_SECONDS)
+            ):
                 continue
             grouped: dict[str, tuple[float, float]] = {
                 entry.label: (entry.damage, entry.heal) for entry in summary.entries
