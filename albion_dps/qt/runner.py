@@ -196,6 +196,7 @@ def _ensure_pyside6_paths() -> None:
             pass
     os.environ.setdefault("QML2_IMPORT_PATH", str(qml_path))
     os.environ.setdefault("QT_PLUGIN_PATH", str(plugins_path))
+    os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
 
 
 def _build_runtime(
