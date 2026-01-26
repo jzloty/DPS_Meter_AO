@@ -158,6 +158,17 @@ GUI keys:
 
 PySide6/QML desktop UI (planned): see `docs/PYSIDE6_PLAN.md` (branch: PySide6).
 
+## GUI (PySide6/QML)
+Install Qt GUI extras:
+```
+python -m pip install -e ".[gui-qt]"
+```
+Run Qt GUI:
+```
+albion-dps qt live
+albion-dps qt replay .\path\to\file.pcap
+```
+
 ## Modes (what "session" means)
 - `battle` (default): creates a session when you enter combat state and ends it when you leave combat state.
   Fallback: if combat state is not observed, it can still end by `--battle-timeout` inactivity.
