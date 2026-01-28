@@ -66,6 +66,7 @@ class AlbionDpsApp(App):
         history_provider: Callable[[int], list],
         history_limit: int,
         set_mode: Callable[[str], None],
+        role_lookup: Callable[[int], str | None] | None = None,
     ) -> None:
         super().__init__()
         self._snapshot_queue = snapshot_queue
@@ -76,6 +77,7 @@ class AlbionDpsApp(App):
         self._history_provider = history_provider
         self._history_limit = history_limit
         self._set_mode = set_mode
+        self._role_lookup = role_lookup
         self._last_snapshot: MeterSnapshot | None = None
         self._header = Static(id="header")
         self._table = DataTable(id="scoreboard")
@@ -119,12 +121,16 @@ class AlbionDpsApp(App):
         if self._top_n and self._top_n > 0:
             entries = entries[: self._top_n]
 
-        max_value = max((entry[5] for entry in entries), default=0.0)
-        max_damage = max((entry[1] for entry in entries), default=0.0)
-        max_heal = max((entry[2] for entry in entries), default=0.0)
+        max_value = max((entry[6] for entry in entries), default=0.0)
+        max_damage = max((entry[2] for entry in entries), default=0.0)
+        max_heal = max((entry[3] for entry in entries), default=0.0)
         rows = []
-        for label, damage, heal, dps, hps, sort_value in entries:
-            role = _infer_role(damage, heal, max_damage, max_heal)
+        for source_id, label, damage, heal, dps, hps, sort_value in entries:
+            role = None
+            if self._role_lookup is not None:
+                role = self._role_lookup(source_id)
+            if not role:
+                role = _infer_role(damage, heal, max_damage, max_heal)
             color = _color_for_label(label, role)
             bar = _bar(sort_value, max_value, BAR_WIDTH, color)
             rows.append(
@@ -184,28 +190,19 @@ class AlbionDpsApp(App):
 
 def _snapshot_entries(
     snapshot: MeterSnapshot, sort_key: str
-) -> list[tuple[str, float, float, float, float, float]]:
+) -> list[tuple[int, str, float, float, float, float, float]]:
     field = SORT_FIELD.get(sort_key, "dps")
-    entries: list[tuple[str, float, float, float, float, float]] = []
+    entries: list[tuple[int, str, float, float, float, float, float]] = []
     names = snapshot.names or {}
-    grouped: dict[str, list[float]] = {}
     for source_id, stats in snapshot.totals.items():
         label = names.get(source_id) or str(source_id)
         damage = float(stats.get("damage", 0.0))
         heal = float(stats.get("heal", 0.0))
         dps = float(stats.get("dps", 0.0))
         hps = float(stats.get("hps", 0.0))
-        if label not in grouped:
-            grouped[label] = [0.0, 0.0, 0.0, 0.0]
-        grouped[label][0] += damage
-        grouped[label][1] += heal
-        grouped[label][2] += dps
-        grouped[label][3] += hps
-    for label, values in grouped.items():
-        damage, heal, dps, hps = values
         sort_value = float({"damage": damage, "heal": heal, "dps": dps, "hps": hps}[field])
-        entries.append((label, damage, heal, dps, hps, sort_value))
-    entries.sort(key=lambda item: item[5], reverse=True)
+        entries.append((source_id, label, damage, heal, dps, hps, sort_value))
+    entries.sort(key=lambda item: item[6], reverse=True)
     return entries
 
 

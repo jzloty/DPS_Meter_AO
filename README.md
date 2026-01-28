@@ -178,6 +178,21 @@ Qt keys:
 - `b` battle mode, `z` zone mode, `m` manual mode
 - `1` dps sort, `2` dmg sort, `3` hps sort, `4` heal sort
 
+## Weapon-based role colors (optional)
+Role colors can be driven by equipped weapon instead of pure damage/heal heuristics.
+Provide item databases locally (not committed):
+- `indexedItems.json` (maps item index -> UniqueName, from game files)
+- optional `items.json` (UniqueName -> shopsubcategory1)
+
+Default search paths:
+- `data/indexedItems.json`, `data/items.json`
+
+Or set environment variables:
+```
+$env:ALBION_DPS_INDEXED_ITEMS="C:\path\to\indexedItems.json"
+$env:ALBION_DPS_ITEMS_JSON="C:\path\to\items.json"
+```
+
 ## Modes (what "session" means)
 - `battle` (default): creates a session when you enter combat state and ends it when you leave combat state.
   Fallback: if combat state is not observed, it can still end by `--battle-timeout` inactivity.

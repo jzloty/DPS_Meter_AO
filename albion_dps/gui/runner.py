@@ -7,7 +7,7 @@ import threading
 from collections.abc import Iterable, Callable
 
 from albion_dps.capture import auto_detect_interface, list_interfaces
-from albion_dps.domain import FameTracker, NameRegistry, PartyRegistry
+from albion_dps.domain import FameTracker, NameRegistry, PartyRegistry, load_item_resolver
 from albion_dps.meter.session_meter import SessionMeter
 from albion_dps.models import MeterSnapshot
 from albion_dps.pipeline import live_snapshots, replay_snapshots
@@ -34,6 +34,10 @@ def run_gui(args: argparse.Namespace) -> int:
         return 1
 
     names, party, fame, meter, decoder, mapper = _build_runtime(args)
+    item_resolver = load_item_resolver(logger=logging.getLogger(__name__))
+
+    def role_lookup(entity_id: int) -> str | None:
+        return item_resolver.role_for_items(names.items_for(entity_id))
 
     if args.gui_command == "live":
         if args.list_interfaces:
@@ -89,6 +93,7 @@ def run_gui(args: argparse.Namespace) -> int:
         history_provider=meter.history,
         history_limit=max(args.history, 1),
         set_mode=meter.set_mode,
+        role_lookup=role_lookup,
     )
 
     if args.gui_command == "replay":
@@ -112,6 +117,7 @@ def run_gui(args: argparse.Namespace) -> int:
         history_provider=meter.history,
         history_limit=max(args.history, 1),
         set_mode=meter.set_mode,
+        role_lookup=role_lookup,
     )
 
     logging.getLogger(__name__).error("Unknown gui command")
@@ -160,6 +166,7 @@ def _run_textual_app(
     history_provider: Callable[[int], list],
     history_limit: int,
     set_mode: Callable[[str], None],
+    role_lookup: Callable[[int], str | None] | None = None,
 ) -> int:
     snapshot_queue: SnapshotQueue = queue.Queue()
     stop_event = threading.Event()
@@ -178,6 +185,7 @@ def _run_textual_app(
         history_provider=history_provider,
         history_limit=history_limit,
         set_mode=set_mode,
+        role_lookup=role_lookup,
     )
     try:
         app.run()

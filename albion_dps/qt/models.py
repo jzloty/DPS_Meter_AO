@@ -188,6 +188,7 @@ class UiState(QObject):
         top_n: int,
         history_limit: int,
         set_mode_callback: Callable[[str], None] | None = None,
+        role_lookup: Callable[[int], str | None] | None = None,
     ) -> None:
         super().__init__()
         self._mode = "battle"
@@ -204,6 +205,7 @@ class UiState(QObject):
         self._last_snapshot = None
         self._last_names: dict[int, str] = {}
         self._last_history: list[SessionSummary] = []
+        self._role_lookup = role_lookup
 
     @Property(str, notify=modeChanged)
     def mode(self) -> str:
@@ -256,6 +258,7 @@ class UiState(QObject):
                     names=self._last_names,
                     sort_key=self._sort_key,
                     top_n=self._top_n,
+                    role_lookup=self._role_lookup,
                 )
             )
 
@@ -302,6 +305,7 @@ class UiState(QObject):
                 names=names,
                 sort_key=self._sort_key,
                 top_n=self._top_n,
+                role_lookup=self._role_lookup,
             )
         )
         self._history.set_items(
@@ -339,6 +343,7 @@ def _build_player_rows(
     names: dict[int, str],
     sort_key: str,
     top_n: int,
+    role_lookup: Callable[[int], str | None] | None = None,
 ) -> list[PlayerRow]:
     rows: list[PlayerRow] = []
     metric = SORT_KEY_MAP.get(sort_key, "dps")
@@ -350,7 +355,11 @@ def _build_player_rows(
         heal = float(stats.get("heal", 0.0))
         dps = float(stats.get("dps", 0.0))
         hps = float(stats.get("hps", 0.0))
-        role = _infer_role(damage, heal, max_damage=max_damage, max_heal=max_heal)
+        role = None
+        if role_lookup is not None:
+            role = role_lookup(source_id)
+        if not role:
+            role = _infer_role(damage, heal, max_damage=max_damage, max_heal=max_heal)
         color = _color_for_label(label, role)
         rows.append(
             PlayerRow(
@@ -360,7 +369,7 @@ def _build_player_rows(
                 dps=dps,
                 hps=hps,
                 bar_ratio=0.0,
-                role=role,
+                role=role or "",
                 color=color,
             )
         )

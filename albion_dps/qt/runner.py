@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from albion_dps.capture import auto_detect_interface, list_interfaces
-from albion_dps.domain import FameTracker, NameRegistry, PartyRegistry
+from albion_dps.domain import FameTracker, NameRegistry, PartyRegistry, load_item_resolver
 from albion_dps.meter.session_meter import SessionMeter
 from albion_dps.models import MeterSnapshot
 from albion_dps.pipeline import live_snapshots, replay_snapshots
@@ -40,6 +40,10 @@ def run_qt(args: argparse.Namespace) -> int:
     from albion_dps.qt.models import UiState
 
     names, party, fame, meter, decoder, mapper = _build_runtime(args)
+    item_resolver = load_item_resolver(logger=logging.getLogger(__name__))
+
+    def role_lookup(entity_id: int) -> str | None:
+        return item_resolver.role_for_items(names.items_for(entity_id))
     snapshots = _build_snapshot_stream(args, names, party, fame, meter, decoder, mapper)
     if snapshots is None:
         return 1
@@ -73,6 +77,7 @@ def run_qt(args: argparse.Namespace) -> int:
         top_n=args.top,
         history_limit=max(args.history, 1),
         set_mode_callback=meter.set_mode,
+        role_lookup=role_lookup,
     )
     engine.rootContext().setContextProperty("uiState", state)
     engine.load(str(qml_path))

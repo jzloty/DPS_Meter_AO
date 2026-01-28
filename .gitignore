@@ -26,6 +26,11 @@ albion_dps/artifacts/unknown/
 # PCAP captures (kept local; not committed)
 *.pcap
 
+# Optional item databases (local)
+data/
+indexedItems.json
+items.json
+
 # Project-specific folders/files not meant for git
 wzor/
 AGENTS.md

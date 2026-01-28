@@ -80,6 +80,12 @@ class NameRegistry:
     def snapshot_id_guids(self) -> dict[int, bytes]:
         return dict(self._id_guids)
 
+    def items_for(self, entity_id: int) -> list[int]:
+        items = self._entity_items.get(entity_id)
+        if not items:
+            return []
+        return list(items)
+
     def _apply_event(self, parameters: dict[int, object]) -> None:
         self._apply_party_roster(parameters)
         self._apply_guid_link(parameters)
