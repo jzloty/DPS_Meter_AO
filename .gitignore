@@ -12,6 +12,7 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+tmp/
 
 # Build / packaging
 dist/
@@ -28,11 +29,17 @@ albion_dps/artifacts/unknown/
 
 # Optional item databases (local)
 data/
+!data/
 indexedItems.json
 items.json
+# Allow the shared category mapping to be tracked.
+!data/item_category_mapping.py
 
 # Project-specific folders/files not meant for git
 wzor/
+wzor2/
+wzor3/
+wzor4/
 AGENTS.md
 
 # Editor / OS noise

@@ -183,14 +183,18 @@ Role colors can be driven by equipped weapon instead of pure damage/heal heurist
 Provide item databases locally (not committed):
 - `indexedItems.json` (maps item index -> UniqueName, from game files)
 - optional `items.json` (UniqueName -> shopsubcategory1)
+- optional `item_category_mapping.json` / `item_category_mapping.py` (UniqueName -> category)
+If `items.json` is missing, the category mapping is used as a fallback.
 
 Default search paths:
 - `data/indexedItems.json`, `data/items.json`
+- `data/item_category_mapping.json`, `data/item_category_mapping.py`
 
 Or set environment variables:
 ```
 $env:ALBION_DPS_INDEXED_ITEMS="C:\path\to\indexedItems.json"
 $env:ALBION_DPS_ITEMS_JSON="C:\path\to\items.json"
+$env:ALBION_DPS_ITEM_CATEGORY_MAPPING="C:\path\to\item_category_mapping.py"
 ```
 
 ## Modes (what "session" means)
