@@ -82,6 +82,10 @@ def _resolve_game_root(logger) -> Path | None:
             if _is_valid_game_root(path):
                 return path
             logger.warning("Stored game root is invalid: %s", path)
+    auto_path = _auto_detect_game_root()
+    if auto_path is not None:
+        logger.info("Auto-detected game root: %s", auto_path)
+        return auto_path
     return None
 
 
@@ -127,6 +131,44 @@ def _is_valid_game_root(path: Path) -> bool:
     items_bin = path / "game" / "Albion-Online_Data" / "StreamingAssets" / "GameData" / "items.bin"
     localization_bin = path / "game" / "Albion-Online_Data" / "StreamingAssets" / "GameData" / "localization.bin"
     return items_bin.exists() and localization_bin.exists()
+
+
+def _auto_detect_game_root() -> Path | None:
+    candidates: list[Path] = []
+    if sys.platform == "win32":
+        candidates.extend(
+            [
+                Path(r"C:\Program Files\Albion Online"),
+                Path(r"C:\Program Files (x86)\Albion Online"),
+                Path(r"C:\Program Files\Steam\steamapps\common\Albion Online"),
+                Path(r"C:\Program Files (x86)\Steam\steamapps\common\Albion Online"),
+            ]
+        )
+    elif sys.platform == "darwin":
+        candidates.extend(
+            [
+                Path("/Applications/Albion Online.app/Contents/Resources"),
+                Path.home()
+                / "Library"
+                / "Application Support"
+                / "Steam"
+                / "steamapps"
+                / "common"
+                / "Albion Online",
+            ]
+        )
+    else:
+        candidates.extend(
+            [
+                Path.home() / ".steam" / "steam" / "steamapps" / "common" / "Albion Online",
+                Path.home() / ".local" / "share" / "Steam" / "steamapps" / "common" / "Albion Online",
+            ]
+        )
+
+    for candidate in candidates:
+        if _is_valid_game_root(candidate):
+            return candidate
+    return None
 
 
 def _run_extractor(game_root: Path, *, logger) -> bool:

@@ -223,6 +223,7 @@ When `map_index.json` is available, the zone label shows map names (e.g. `Lazygr
 ```
 This writes the same `data/*.json` files locally.
 If you start the GUI from a terminal and no game root is set, it will prompt for a path.
+If the game is installed in a default Steam/Applications path, it will try to auto-detect first.
 
 ## Modes (what "session" means)
 - `battle` (default): creates a session when you enter combat state and ends it when you leave combat state.
