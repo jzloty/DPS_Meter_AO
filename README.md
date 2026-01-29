@@ -131,6 +131,10 @@ Environment defaults (optional):
 $env:ALBION_DPS_SELF_NAME="YourName"
 $env:ALBION_DPS_SELF_ID="123456"
 ```
+Optional item DB settings:
+```
+$env:ALBION_DPS_GAME_ROOT="C:\Program Files\Albion Online"
+```
 
 ## GUI (Textual)
 Install GUI extras:
@@ -208,6 +212,7 @@ This writes:
 - `data/items.json`
 
 Game root must contain `game\Albion-Online_Data\StreamingAssets\GameData\items.bin`.
+If item DBs are missing, the GUI will prompt to select the game folder (Windows only).
 
 ## Modes (what "session" means)
 - `battle` (default): creates a session when you enter combat state and ends it when you leave combat state.

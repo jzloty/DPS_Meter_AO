@@ -50,6 +50,7 @@ Generate them with:
 ```
 .\tools\extract_items\run_extract_items.ps1 -GameRoot "C:\Program Files\Albion Online"
 ```
+Alternatively set `ALBION_DPS_GAME_ROOT` and launch the GUI to be prompted.
 
 ## Permission issues (Windows)
 Npcap capture can require elevated permissions depending on configuration.
