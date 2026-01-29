@@ -86,11 +86,18 @@ def _resolve_game_root(logger) -> Path | None:
 
 
 def _prompt_game_root(logger) -> Path | None:
-    if sys.platform != "win32":
-        logger.info("Game root prompt is only available on Windows.")
-        return None
     if not sys.stdin.isatty():
         return None
+    if sys.platform != "win32":
+        try:
+            print("Enter Albion Online install folder path (empty to cancel): ", end="", flush=True)
+            folder = input().strip()
+        except EOFError:
+            return None
+        if not folder:
+            return None
+        return Path(folder)
+
     try:
         import tkinter as tk
         from tkinter import filedialog

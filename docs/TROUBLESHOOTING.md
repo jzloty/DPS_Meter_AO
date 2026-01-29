@@ -55,6 +55,7 @@ On Linux/macOS use:
 ```
 ./tools/extract_items/run_extract_items.sh --game-root "/path/to/Albion Online"
 ```
+If you run the GUI from a terminal and no game root is set, it will prompt for a path.
 
 ## Zone label shows only numbers/IP
 If you see `2000@x.x.x.x:5056`, the map index database is missing.

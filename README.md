@@ -222,6 +222,7 @@ When `map_index.json` is available, the zone label shows map names (e.g. `Lazygr
 ./tools/extract_items/run_extract_items.sh --game-root "/path/to/Albion Online"
 ```
 This writes the same `data/*.json` files locally.
+If you start the GUI from a terminal and no game root is set, it will prompt for a path.
 
 ## Modes (what "session" means)
 - `battle` (default): creates a session when you enter combat state and ends it when you leave combat state.
