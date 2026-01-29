@@ -52,6 +52,10 @@ Generate them with:
 ```
 Alternatively set `ALBION_DPS_GAME_ROOT` and launch the GUI to be prompted.
 
+## Zone label shows only numbers/IP
+If you see `2000@x.x.x.x:5056`, the map index database is missing.
+Generate it with the same extractor (creates `data/map_index.json`), or set `ALBION_DPS_MAP_INDEX`.
+
 ## Permission issues (Windows)
 Npcap capture can require elevated permissions depending on configuration.
 If capture fails, try running the terminal as Administrator and ensure Npcap is installed correctly.

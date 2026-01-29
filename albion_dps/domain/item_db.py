@@ -4,7 +4,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Iterable
 
 
 GAME_ROOT_ENV = "ALBION_DPS_GAME_ROOT"
@@ -15,10 +14,16 @@ DEFAULT_INDEXED_PATHS = (
     Path("data/indexed_items.json"),
     Path("indexedItems.json"),
 )
+DEFAULT_MAP_INDEX_PATHS = (
+    Path("data/map_index.json"),
+    Path("map_index.json"),
+)
 
 
-def ensure_item_databases(*, logger, interactive: bool = True) -> bool:
-    if _has_indexed_items():
+def ensure_game_databases(*, logger, interactive: bool = True) -> bool:
+    has_items = _has_indexed_items()
+    has_maps = _has_map_index()
+    if has_items and has_maps:
         return True
     if not interactive:
         return False
@@ -39,11 +44,25 @@ def ensure_item_databases(*, logger, interactive: bool = True) -> bool:
     return _run_extractor(game_root, logger=logger)
 
 
+def ensure_item_databases(*, logger, interactive: bool = True) -> bool:
+    return ensure_game_databases(logger=logger, interactive=interactive)
+
+
 def _has_indexed_items() -> bool:
     for path in DEFAULT_INDEXED_PATHS:
         if path.exists():
             return True
     env_val = os.environ.get("ALBION_DPS_INDEXED_ITEMS")
+    if env_val and Path(env_val).exists():
+        return True
+    return False
+
+
+def _has_map_index() -> bool:
+    for path in DEFAULT_MAP_INDEX_PATHS:
+        if path.exists():
+            return True
+    env_val = os.environ.get("ALBION_DPS_MAP_INDEX")
     if env_val and Path(env_val).exists():
         return True
     return False
@@ -130,4 +149,4 @@ def _run_extractor(game_root: Path, *, logger) -> bool:
     if result.returncode != 0:
         logger.error("Extractor failed with code %s", result.returncode)
         return False
-    return _has_indexed_items()
+    return _has_indexed_items() and _has_map_index()

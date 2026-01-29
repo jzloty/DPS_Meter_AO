@@ -8,6 +8,7 @@ from albion_dps.capture import auto_detect_interface, list_interfaces
 from albion_dps.cli_clipboard import copy_to_clipboard
 from albion_dps.cli_ui import format_dashboard, format_history_lines, render_loop
 from albion_dps.domain import FameTracker, NameRegistry, PartyRegistry
+from albion_dps.domain.map_resolver import load_map_resolver
 from albion_dps.gui.runner import run_gui
 from albion_dps.qt.runner import run_qt
 from albion_dps.logging_config import configure_logging
@@ -106,6 +107,8 @@ def main(argv: list[str] | None = None) -> int:
             mode=args.mode,
             name_lookup=names.lookup,
         )
+        map_resolver = load_map_resolver(logger=logging.getLogger(__name__))
+        meter.map_lookup = map_resolver.name_for_index
         if self_name:
             party.set_self_name(self_name, confirmed=True)
         if self_id is not None:
@@ -192,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
             mode=args.mode,
             name_lookup=names.lookup,
         )
+        map_resolver = load_map_resolver(logger=logging.getLogger(__name__))
+        meter.map_lookup = map_resolver.name_for_index
         if self_name:
             party.set_self_name(self_name, confirmed=True)
         if self_id is not None:

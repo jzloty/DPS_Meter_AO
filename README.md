@@ -199,6 +199,7 @@ Or set environment variables:
 $env:ALBION_DPS_INDEXED_ITEMS="C:\path\to\indexedItems.json"
 $env:ALBION_DPS_ITEMS_JSON="C:\path\to\items.json"
 $env:ALBION_DPS_ITEM_CATEGORY_MAPPING="C:\path\to\item_category_mapping.py"
+$env:ALBION_DPS_MAP_INDEX="C:\path\to\map_index.json"
 ```
 
 ## Generate item databases (Windows)
@@ -210,9 +211,11 @@ The repo includes a small extractor wrapper:
 This writes:
 - `data/indexedItems.json`
 - `data/items.json`
+- `data/map_index.json`
 
 Game root must contain `game\Albion-Online_Data\StreamingAssets\GameData\items.bin`.
 If item DBs are missing, the GUI will prompt to select the game folder (Windows only).
+When `map_index.json` is available, the zone label shows map names (e.g. `Lazygrass Plain@ip:port`).
 
 ## Modes (what "session" means)
 - `battle` (default): creates a session when you enter combat state and ends it when you leave combat state.

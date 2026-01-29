@@ -41,6 +41,7 @@ class SessionMeter:
     history_limit: int = 10
     mode: str = "battle"
     name_lookup: Callable[[int], str | None] | None = None
+    map_lookup: Callable[[str], str | None] | None = None
     _history: dict[str, Deque[SessionSummary]] = field(
         default_factory=lambda: {
             "battle": deque(maxlen=10),
@@ -189,10 +190,16 @@ class SessionMeter:
                 self._start_session(timestamp)
 
     def _format_zone_label(self) -> str | None:
-        if self._map_index and self._zone_socket:
-            return f"{self._map_index}@{self._zone_socket}"
+        map_label = None
         if self._map_index:
-            return self._map_index
+            if self.map_lookup is not None:
+                map_label = self.map_lookup(self._map_index)
+            if not map_label:
+                map_label = self._map_index
+        if map_label and self._zone_socket:
+            return f"{map_label}@{self._zone_socket}"
+        if map_label:
+            return map_label
         return self._zone_socket
 
     def push(self, event: CombatEvent) -> None:

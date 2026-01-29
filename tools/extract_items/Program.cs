@@ -83,8 +83,10 @@ try
 {
     await extractor.ExtractIndexedItemGameDataAsync(outputDir, "indexedItems.json");
     await extractor.ExtractGameDataAsync(outputDir, new[] { "items" });
+    await extractor.ExtractMapIndexAsync(outputDir, "map_index.json");
     Console.WriteLine($"Generated: {Path.Combine(outputDir, "indexedItems.json")}");
     Console.WriteLine($"Generated: {Path.Combine(outputDir, "items.json")}");
+    Console.WriteLine($"Generated: {Path.Combine(outputDir, "map_index.json")}");
     return 0;
 }
 finally

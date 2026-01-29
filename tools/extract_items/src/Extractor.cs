@@ -31,6 +31,12 @@ public class Extractor
         await ItemData.CreateItemDataAsync(_mainGameServerFolderString, _localizationData, outputDirPath, indexedItemsFileName);
     }
 
+    public async Task ExtractMapIndexAsync(string outputDirPath, string mapIndexFileName)
+    {
+        await LoadLocationDataAsync();
+        await MapData.CreateMapIndexAsync(_mainGameServerFolderString, _localizationData, outputDirPath, mapIndexFileName);
+    }
+
     public async Task ExtractGameDataAsync(string outputDirPath, string[] binFileNamesToExtract)
     {
         await LoadLocationDataAsync();
