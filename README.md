@@ -199,7 +199,7 @@ $env:ALBION_DPS_ITEM_CATEGORY_MAPPING="C:\path\to\item_category_mapping.py"
 
 ## Generate item databases (Windows)
 To enable per-weapon colors, generate `indexedItems.json` and `items.json` from your local Albion Online files.
-The repo includes a small extractor wrapper that uses the `wzor` sources:
+The repo includes a small extractor wrapper:
 ```
 .\tools\extract_items\run_extract_items.ps1 -GameRoot "C:\Program Files\Albion Online"
 ```

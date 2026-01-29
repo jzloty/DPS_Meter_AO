@@ -7,8 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\wzor\src\StatisticAnalysisTool.Extractor\**\*.cs"
-             Exclude="..\..\wzor\src\StatisticAnalysisTool.Extractor\obj\**\*.cs" />
+    <Compile Include="src\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
